@@ -153,6 +153,25 @@ for month_tweets_filename in sys.argv[1:]:
 			print("\n---------------------------------------")
 			print("{0} 发布推文：\n\t{1}".format(local_datetime,tweet_text))
 
+			#如果引用推文并回复，则显示引用推文内容
+			try:
+				if 'quoted_status' in tweet.keys() :
+					qt_name = tweet['quoted_status']['user']['name']
+					
+					quoted_tweet_text = tweet['quoted_status']['text']
+					#如果text中有网址，则替换成实际应该显示的网址
+					for quotereplaceurl in tweet['quoted_status']['entities']['urls']:
+						url = quotereplaceurl['url']
+						expanded_url = quotereplaceurl['expanded_url']
+						display_url = quotereplaceurl['display_url']
+						display_url = "<a href='" + expanded_url + "' target=\"_blank\">" + display_url + "</a>"
+						quoted_tweet_text = re.sub(url, display_url, quoted_tweet_text)
+
+					print("QT Frome @{0} : {1}".format(qt_name,quoted_tweet_text),file = outputFile)
+					print("",file = outputFile)
+					print("\tQT Frome @{0} : {1}".format(qt_name,quoted_tweet_text))
+			except KeyError:
+				pass
 
 			#建立以年月为名称的文件夹用来保存当月的图片和视频
 			media_directory_name = datetime_number[:6]
@@ -169,6 +188,9 @@ for month_tweets_filename in sys.argv[1:]:
 				if 'retweeted_status' in tweet.keys() and 'extended_entities' in tweet['retweeted_status'].keys() \
 					and 'media' in tweet['retweeted_status']['extended_entities'].keys():
 					medialist.extend(tweet['retweeted_status']['extended_entities']['media'])
+				if 'quoted_status' in tweet.keys() and 'extended_entities' in tweet['quoted_status'].keys() \
+					and 'media' in tweet['quoted_status']['extended_entities'].keys():
+					medialist.extend(tweet['quoted_status']['extended_entities']['media'])
 					
 				medialist = list(dedupe(medialist, key=lambda d: d['media_url_https']))
 				
